@@ -5,7 +5,9 @@ const characters = require("./pokemons");
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: "*" }
+  cors: { origin: "*" },
+  pingTimeout: 60000,  
+  pingInterval: 25000   
 });
 let index={}
 let pokemons={}
