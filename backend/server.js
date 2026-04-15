@@ -36,6 +36,21 @@ function startAuction(id){
   }
   startTimer(id);
 }
+function cleanup(roomId) {
+  if (auctions[roomId]?.interval) {
+    clearInterval(auctions[roomId].interval);
+  }
+
+  if (auctions[roomId]?.breakInterval) {
+    clearInterval(auctions[roomId].breakInterval);
+  }
+
+  delete rooms[roomId];
+  delete index[roomId];
+  delete auctions[roomId];
+  delete pokemons[roomId];
+  delete players[roomId];
+}
 function checkBid(id){
   const pokemon = pokemons[id];
   const auction = auctions[id];
@@ -93,37 +108,45 @@ function checkBid(id){
 function startTimer(roomId) {
   const auction = auctions[roomId];
   if (!auction) return;
+
   if (auction.interval) clearInterval(auction.interval);
+
   auction.interval = setInterval(() => {
     if (!auctions[roomId]) {
       clearInterval(auction.interval);
       return;
     }
-    if (typeof auctions[roomId].timer !== "number") {
-      auctions[roomId].timer = 0;
-    }
+
     auctions[roomId].timer--;
+
     io.to(roomId).emit("timer", auctions[roomId].timer);
+
     if (auctions[roomId].timer <= 0) {
       clearInterval(auction.interval);
-      if (!auctions[roomId]) return;
+
       checkBid(roomId);
+
       let wait = 5;
+
       io.to(roomId).emit("round-end", {
         message: "Round ended",
         nextIn: wait
       });
-      const breakInterval = setInterval(() => {
+
+      auction.breakInterval = setInterval(() => {
         if (!auctions[roomId]) {
-          clearInterval(breakInterval);
+          clearInterval(auction.breakInterval);
           return;
         }
+
         wait--;
+
         io.to(roomId).emit("round-end", {
           nextIn: wait
         });
+
         if (wait <= 0) {
-          clearInterval(breakInterval);
+          clearInterval(auction.breakInterval);
           if (auctions[roomId]) startAuction(roomId);
         }
       }, 1000);
