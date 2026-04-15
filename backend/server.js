@@ -12,6 +12,15 @@ let pokemons={}
 let rooms = {};
 let auctions={}
 let players={}
+function shufflePokemons(arr) {
+  const shuffled = [...arr]; 
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+let updatedPokemons = shufflePokemons(characters);
 io.on("connection", (socket) => {
 console.log("Connected:", socket.id);
 function startAuction(id){
@@ -181,7 +190,6 @@ socket.on("join-room", (msg) => {
     players[roomId] = [...rooms[roomId]];
     index[roomId] = 0;
 
-    const updatedPokemons = (characters || [])
     pokemons[roomId] = updatedPokemons
       .slice(0,20)
       .map(i => ({ ...i, sold: "" }));
